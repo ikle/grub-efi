@@ -578,7 +578,10 @@ dpname_matches(char *str, char *candidate)
     return rc;
 }
 
-static void
+extern void
+finish_param_parse(char *pos, char **end, char *tmp);
+
+void
 finish_param_parse(char *pos, char **end, char *tmp)
 {
   if (!pos || !end || !tmp)
