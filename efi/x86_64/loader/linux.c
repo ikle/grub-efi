@@ -374,7 +374,7 @@ grub_load_linux (char *kernel, char *arg)
   grub_uint64_t kernel_base, kernel_length, kernel_pages;
   grub_ssize_t len;
   char *dest;
-  int align, min_alignment;
+  int align = 0, min_alignment;
   int relocatable = 0;
 
   if (kernel == NULL)
