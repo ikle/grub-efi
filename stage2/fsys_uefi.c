@@ -75,7 +75,7 @@ uefi_dir (char *dirname)
   grub_efi_char16_t *file_name_w = NULL;
   grub_efi_char16_t *dir_name_w = NULL;
   grub_efi_file_info_t *fileinfo = NULL;
-  grub_efi_uintn_t buffersize = 0;  
+  grub_efi_uintn_t buffersize = 0, prev_buffersize;
   grub_efi_file_t *directory = NULL;
   int i, dirlen = 0, ret = 0;
 
@@ -106,9 +106,13 @@ uefi_dir (char *dirname)
     while (1) {
       int filenamelen;
 
+      prev_buffersize = buffersize;
+
       status = Call_Service_3 (file->read, file, &buffersize, fileinfo);
 
       if (status == GRUB_EFI_BUFFER_TOO_SMALL) {
+	if (buffersize == prev_buffersize)
+	  buffersize += 1024;
 	fileinfo = grub_malloc(buffersize);
 	continue;
       } else if (status) {
@@ -146,9 +150,13 @@ uefi_dir (char *dirname)
       int filenamelen;
       int invalid = 0;
 
+      prev_buffersize = buffersize;
+
       status = Call_Service_3 (directory->read, directory, &buffersize, fileinfo);
 
       if (status == GRUB_EFI_BUFFER_TOO_SMALL) {
+	if (buffersize == prev_buffersize)
+	  buffersize += 1024;
 	fileinfo = grub_malloc(buffersize);
 	continue;
       } else if (status) {
