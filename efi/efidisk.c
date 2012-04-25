@@ -522,7 +522,7 @@ grub_get_drive_partition_from_bdev_handle (grub_efi_handle_t handle,
     {
       grub_efi_uint8_t type = GRUB_EFI_DEVICE_PATH_TYPE (dp1);
       grub_efi_uint8_t subtype = GRUB_EFI_DEVICE_PATH_SUBTYPE(dp1);
-      grub_efi_uint16_t len = GRUB_EFI_DEVICE_PATH_LENGTH (dp);
+      grub_efi_uint16_t len = GRUB_EFI_DEVICE_PATH_LENGTH (dp1);
 
       if (type == GRUB_EFI_MEDIA_DEVICE_PATH_TYPE &&
 	      subtype == GRUB_EFI_CDROM_DEVICE_PATH_SUBTYPE)
