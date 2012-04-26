@@ -226,7 +226,8 @@ set_kernel_params(struct graphics_backend *backend,
     grub_efi_graphics_output_mode_information_t *gop_info = NULL;
     grub_efi_uintn_t size;
 
-    gop_intf = grub_efi_locate_protocol (&graphics_output_guid, NULL);
+    gop_intf = eg->output_intf;
+
     if (gop_intf == NULL)
         return;
 
