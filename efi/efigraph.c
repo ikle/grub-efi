@@ -74,6 +74,7 @@ typedef struct grub_pixel_info grub_pixel_info_t;
 
 static grub_efi_guid_t graphics_output_guid = GRUB_EFI_GRAPHICS_OUTPUT_GUID;
 static grub_efi_guid_t pci_io_guid = GRUB_EFI_PCI_IO_GUID;
+static grub_efi_guid_t edid_guid = GRUB_EFI_EDID_DISCOVERED_GUID;
 
 #ifndef MIN
 #define MIN(x,y) ( ((x) < (y)) ? (x) : (y))
@@ -178,39 +179,6 @@ get_graphics_mode_info(struct eg *eg)
 }
 
 static void
-print_mode_info(struct video_mode *mode)
-{
-	grub_efi_graphics_output_mode_information_t *info = mode->info;
-	dprintf("mode %d (%dx%d, pitch %d, ",
-		mode->number,
-		info->horizontal_resolution,
-		info->vertical_resolution,
-		info->pixels_per_scan_line);
-	switch(info->pixel_format) {
-		case GRUB_EFI_PIXEL_RGBR_8BIT_PER_COLOR:
-			dprintf("rgbr 8bpc");
-			break;
-		case GRUB_EFI_PIXEL_BGRR_8BIT_PER_COLOR:
-			dprintf("bgrr 8bpc");
-			break;
-		case GRUB_EFI_PIXEL_BIT_MASK:
-			dprintf("bitmask color");
-			break;
-		case GRUB_EFI_PIXEL_BLT_ONLY:
-			dprintf("blt only");
-			break;
-	}
-	dprintf(")\n");
-	if (info->pixel_format == GRUB_EFI_PIXEL_BIT_MASK) {
-		dprintf("red: %08x green: %08x blue: %08x res: %08x\n",
-		info->pixel_information.red_mask,
-		info->pixel_information.green_mask,
-		info->pixel_information.blue_mask,
-		info->pixel_information.reserved_mask);
-	}
-}
-
-static void
 set_kernel_params(struct graphics_backend *backend,
             struct linux_kernel_params *params)
 {
@@ -247,6 +215,7 @@ set_kernel_params(struct graphics_backend *backend,
         params->vesapm_segment = 0;
         params->vesapm_offset = 0;
         params->vesa_attrib = 0;
+	params->capabilities = 1;
         if (gop_info->pixel_format == GRUB_EFI_PIXEL_RGBR_8BIT_PER_COLOR) {
             params->lfb_depth = 32;
             params->red_mask_size = 8;
@@ -322,15 +291,6 @@ set_kernel_params(struct graphics_backend *backend,
 }
 
 static void
-pixel_to_rgb(grub_efi_graphics_output_pixel_t *pixel,
-             int *red, int *green, int *blue)
-{
-    *red = pixel->bgrr.red;
-    *green = pixel->bgrr.green;
-    *blue = pixel->bgrr.blue;
-}
-
-static void
 rgb_to_pixel(int red, int green, int blue,
              grub_efi_graphics_output_pixel_t *pixel)
 {
@@ -344,14 +304,6 @@ position_to_phys(struct eg *eg, position_t *virt, position_t *phys)
 {
     phys->x = virt->x + eg->screen_pos.x;
     phys->y = virt->y + eg->screen_pos.y;
-}
-
-static int
-abs_paddr(struct eg *eg, position_t *virt)
-{
-    position_t phys;
-    position_to_phys(eg, virt, &phys);
-    return phys.x + phys.y * eg->screen_size.x;
 }
 
 struct bltbuf {
@@ -554,18 +506,6 @@ blt_to_screen_pos(struct eg *eg, struct bltbuf *bltbuf, position_t *pos)
     blt_pos_to_screen_pos(eg, bltbuf, &bltpos, &bltsz, pos);
 }
 
-static int
-save_video_mode(struct eg *eg, struct video_mode *mode)
-{
-	grub_efi_status_t status;
-
-
-
-	status = Call_Service_4(eg->output_intf->query_mode, eg->output_intf,
-                                mode->number, &mode->size, &mode->info);
-	return status == GRUB_EFI_SUCCESS;
-}
-
 static void
 get_screen_size(struct graphics_backend *backend, position_t *size)
 {
@@ -591,20 +531,6 @@ bltbuf_set_pixel(struct bltbuf *bltbuf, position_t *pos,
 }
 
 static void
-bltbuf_get_pixel(struct bltbuf *bltbuf, position_t *pos,
-                 grub_efi_graphics_output_pixel_t *pixel)
-{
-    if (bltbuf && pos->x < bltbuf->width && pos->y < bltbuf->height) {
-    	grub_memmove(pixel, &bltbuf->pixbuf[pos->x + pos->y * bltbuf->width],
-            sizeof *pixel);
-    } else {
-	pixel->bgrr.red = 0x00;
-	pixel->bgrr.green = 0x00;
-	pixel->bgrr.blue = 0x00;
-    }
-}
-
-static void
 bltbuf_set_pixel_rgb(struct bltbuf *bltbuf, position_t *pos,
                      int red, int green, int blue)
 {
@@ -618,19 +544,6 @@ bltbuf_set_pixel_idx(struct eg *eg, struct bltbuf *bltbuf,
                      position_t *pos, int idx)
 {
     bltbuf_set_pixel(bltbuf, pos, &eg->palette[idx]);
-}
-
-static void
-bltbuf_get_pixel_idx(struct bltbuf *bltbuf, position_t *pos, int *idx)
-{
-    grub_efi_graphics_output_pixel_t pixel;
-
-    rgb_to_pixel(0, 0, 0, &pixel);
-    bltbuf_get_pixel(bltbuf, pos, &pixel);
-    for (*idx = 0; *idx < 16; (*idx)++) {
-        if (pixel_equal(cga_colors[*idx], pixel))
-            break;
-    }
 }
 
 static struct bltbuf *
@@ -820,31 +733,6 @@ blank(struct graphics_backend *backend)
     grub_free(bltbuf);
 }
 
-
-static void
-draw_white_box(struct graphics_backend *backend)
-{
-    struct eg *eg = backend->priv;
-    struct bltbuf *bltbuf;
-    position_t pos = {0, 0}, bltpos = {0, 0}, bltsz = {100,100};
-
-    bltbuf = alloc_bltbuf(bltsz.x, bltsz.y);
-    for (pos.y = 0; pos.y < bltsz.y; pos.y++) {
-        for (pos.x = 0; pos.x < bltsz.x; pos.x++) {
-            bltbuf_set_pixel_rgb(bltbuf, &pos, 0xff, 0xff, 0xff);
-        }
-    }
-
-    blt_pos_to_screen_pos(eg, bltbuf, &bltpos, &bltsz, &pos);
-
-#if 0
-    Call_Service_10(eg->output_intf->blt, eg->output_intf, bltbuf->pixbuf,
-        GRUB_EFI_BLT_BUFFER_TO_VIDEO, 0, 0, 100, 100, x, y, 0);
-#endif
-
-    grub_free(bltbuf);
-}
-
 static void
 bltbuf_cp_bl(struct bltbuf *d, position_t dpos,
              struct bltbuf *s, position_t spos)
@@ -888,18 +776,6 @@ bltbuf_draw_bg(struct graphics_backend *backend, struct bltbuf *bltbuf,
     position_t blpos = { 0, 0 };
 
     bltbuf_cp_bl(bltbuf, blpos, eg->background, bgpos);
-}
-
-static void
-dbg_dump_palette(struct graphics_backend *backend)
-{
-    struct eg *eg;
-    int i;
-    if (!backend || !backend->priv)
-        return;
-    eg = backend->priv;
-    if (!eg->palette)
-        return;
 }
 
 static int
@@ -1157,130 +1033,11 @@ fill_pixel_info (grub_pixel_info_t *pixel_info,
   return 1;
 }
 
-/* 1 = prefer a
- * 0 = prefer neither
- * -1 = prefer b
- */
-static int
-modecmp_helper(struct eg *eg, struct video_mode *amode, struct video_mode *bmode)
-{
-        grub_efi_graphics_output_mode_information_t *a = amode->info;
-        grub_efi_graphics_output_mode_information_t *b = bmode->info;
-
-        if (a != NULL && b == NULL)
-                return 1;
-        if (a == NULL && b == NULL)
-                return 0;
-        if (a == NULL && b != NULL)
-                return -1;
-
-#if 0
-	if (amode->number == eg->graphics_mode && bmode->number != eg->graphics_mode)
-		return 1;
-	if (amode->number == eg->graphics_mode && bmode->number == eg->graphics_mode)
-		return 0;
-	if (amode->number != eg->graphics_mode && bmode->number == eg->graphics_mode)
-		return -1;
-#endif
-
-
-	/* kernel doesn't deal with blt only modes, so prefer against them. */
-        if (a->pixel_format != GRUB_EFI_PIXEL_BLT_ONLY &&
-                        b->pixel_format == GRUB_EFI_PIXEL_BLT_ONLY)
-                return 1;
-        if (b->pixel_format != GRUB_EFI_PIXEL_BLT_ONLY &&
-                        a->pixel_format == GRUB_EFI_PIXEL_BLT_ONLY)
-                return -1;
-
-	/* XXX PJFIX there's something wrong with what we're passing to the
-	 * kernel for stride in the bgrr/rgbr modes, and I haven't figured out
-	 * just what yet, so for now, prefer bitmask modes.
-	 */
-	if (a->pixel_format == GRUB_EFI_PIXEL_BIT_MASK &&
-			b->pixel_format != GRUB_EFI_PIXEL_BIT_MASK)
-		return 1;
-	if (a->pixel_format != GRUB_EFI_PIXEL_BIT_MASK &&
-			b->pixel_format == GRUB_EFI_PIXEL_BIT_MASK)
-		return -1;
-
-        if (a->pixel_format == GRUB_EFI_PIXEL_BGRR_8BIT_PER_COLOR &&
-			b->pixel_format != GRUB_EFI_PIXEL_BGRR_8BIT_PER_COLOR)
-		return 1;
-        if (a->pixel_format != GRUB_EFI_PIXEL_BGRR_8BIT_PER_COLOR &&
-			b->pixel_format == GRUB_EFI_PIXEL_BGRR_8BIT_PER_COLOR)
-		return -1;
-
-        if (a->pixel_format == GRUB_EFI_PIXEL_RGBR_8BIT_PER_COLOR &&
-			b->pixel_format != GRUB_EFI_PIXEL_RGBR_8BIT_PER_COLOR)
-		return 1;
-        if (a->pixel_format != GRUB_EFI_PIXEL_RGBR_8BIT_PER_COLOR &&
-			b->pixel_format == GRUB_EFI_PIXEL_RGBR_8BIT_PER_COLOR)
-		return -1;
-
-        if (a->horizontal_resolution > b->horizontal_resolution &&
-                        a->vertical_resolution > b->vertical_resolution)
-                return 1;
-        if (a->horizontal_resolution < b->horizontal_resolution &&
-                        a->vertical_resolution < b->vertical_resolution)
-                return -1;
-        return 0;
-}
-
-static int
-modecmp(struct eg *eg, struct video_mode *amode, struct video_mode *bmode)
-{
-        int rc;
-#if 0
-        grub_efi_graphics_output_mode_information_t *a = amode->info;
-        grub_efi_graphics_output_mode_information_t *b = bmode->info;
-#endif
-        rc = modecmp_helper(eg, amode, bmode);
-#if 0
-        grub_printf("comparing nodes:\n");
-        print_mode_info(amode);
-        print_mode_info(bmode);
-        if (rc > 0)
-                grub_printf("result: a > b\n");
-        else if (rc < 0)
-                grub_printf("result: a < b\n");
-        else
-                grub_printf("result: a == b\n");
-
-        //dbgdelay(__FILE__, __LINE__);
-#endif
-        return rc;
-}
-
-static void
-modeswap(struct video_mode *amode, struct video_mode *bmode)
-{
-        struct video_mode tmp;
-
-        memcpy(&tmp, amode, sizeof (tmp));
-        memcpy(amode, bmode, sizeof (tmp));
-        memcpy(bmode, &tmp, sizeof(tmp));
-}
-
-static void
-sort_modes(struct eg *eg, int p, int r)
-{
-	struct video_mode **modes = eg->modes;
-
-        int i, j;
-	for (i = 0; i < eg->max_mode; i++) {
-		for (j = i + 1; j < eg->max_mode; j++) {
-			if (modecmp(eg, modes[j], modes[i]) < 0)
-				modeswap(modes[j], modes[i]);
-		}
-	}
-}
-
 static int
 try_enable(struct graphics_backend *backend)
 {
     struct eg *eg = backend->priv;
     grub_efi_status_t efi_status = GRUB_EFI_UNSUPPORTED;
-    int i;
 
     if (eg->text_mode == 0xffffffff) {
         grub_efi_set_text_mode(1);
@@ -1288,7 +1045,6 @@ try_enable(struct graphics_backend *backend)
     }
 
     if (eg->graphics_mode == 0xffffffff) {
-        grub_efi_graphics_output_mode_information_t *info;
 
         if (!graphics_alloc_text_buf())
             return 0;
@@ -1296,66 +1052,14 @@ try_enable(struct graphics_backend *backend)
         grub_efi_set_text_mode(0);
         eg->graphics_mode = eg->output_intf->mode->mode;
         grub_efi_set_text_mode(1);
-#if 0
-	dprintf("graphics mode is %d\n", eg->graphics_mode);
-	/* this is okay here because we haven't sorted yet.*/
-	print_mode_info(eg->modes[eg->graphics_mode]);
-	dprintf("text mode is %d\n", eg->text_mode);
-	print_mode_info(eg->modes[eg->text_mode]);
-#endif
 
-        sort_modes(eg, 0, eg->max_mode-1);
+	efi_status = set_video_mode(eg, eg->graphics_mode);
 
-#if 0
-        for (i = eg->max_mode - 1; i >= 0; i--)
-            print_mode_info(eg->modes[i]);
-	dbgdelay(__FILE__, __LINE__);
-#endif
+	if (efi_status != GRUB_EFI_SUCCESS)
+	  return 0;
 
-	efi_status = GRUB_EFI_UNSUPPORTED;
-
-        for (i = eg->max_mode - 1; i >= 0; i--) {
-            if (!eg->modes[i])
-                continue;
-
-            info = eg->modes[i]->info;
-
-#if 0
-            if (info->pixel_format != GRUB_EFI_PIXEL_RGBR_8BIT_PER_COLOR &&
-                 info->pixel_format != GRUB_EFI_PIXEL_BGRR_8BIT_PER_COLOR &&
-                 info->pixel_format != GRUB_EFI_PIXEL_BIT_MASK) {
-                continue;
-            }
-#endif
-
-            grub_efi_set_text_mode(0);
-            efi_status = set_video_mode(eg, eg->modes[i]->number);
-            if (efi_status == GRUB_EFI_SUCCESS) {
-#if 0
-                grub_efi_set_text_mode(1);
-	        dprintf("switched to mode %d successfully\n",
-		        eg->modes[i]->number);
-	        dbgdelay(__FILE__,__LINE__);
-                grub_efi_set_text_mode(0);
-#endif
-                eg->graphics_mode = eg->modes[i]->number;
-	        fill_pixel_info(&eg->pixel_info, info);
-                break;
-            } else {
-#if 0
-                set_video_mode(eg, eg->text_mode);
-                grub_efi_set_text_mode(1);
-		dprintf("return code was %d\n", efi_status);
-#endif
-            }
-        }
-        if (efi_status != GRUB_EFI_SUCCESS) {
-#if 1
-            grub_efi_set_text_mode(1);
-            set_video_mode(eg, eg->text_mode);
-#endif
-            return 0;
-        }
+	fill_pixel_info(&eg->pixel_info, eg->modes[eg->graphics_mode]->info);
+	grub_efi_set_text_mode(0);
 
     }
 
@@ -1378,6 +1082,7 @@ enable(struct graphics_backend *backend)
 	grub_efi_handle_t *handle, *handles;
 	grub_efi_uintn_t num_handles;
 	grub_efi_pci_io_t *pci_proto;
+	void *edid;
 
         if (!(eg = grub_malloc(sizeof (*eg))))
             return 0;
@@ -1399,7 +1104,10 @@ enable(struct graphics_backend *backend)
 	    pci_proto = grub_efi_open_protocol (*handle, &pci_io_guid,
 					 GRUB_EFI_OPEN_PROTOCOL_GET_PROTOCOL);
 
-	    if (!pci_proto)
+	    edid = grub_efi_open_protocol (*handle, &edid_guid,
+					 GRUB_EFI_OPEN_PROTOCOL_GET_PROTOCOL);
+
+	    if (!pci_proto && !edid)
 	      continue;
 
 	    eg->output_intf = grub_efi_open_protocol (*handle,
@@ -1407,7 +1115,8 @@ enable(struct graphics_backend *backend)
 
 	    if (eg->output_intf)
 	      {
-		grub_efi_setup_gfx_pci(*handle);
+		if (pci_proto)
+		  grub_efi_setup_gfx_pci(*handle);
 		break;
 	      }
 	  }
