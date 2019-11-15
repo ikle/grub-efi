@@ -757,5 +757,6 @@ AC_CONFIG_FILES([Makefile stage1/Makefile stage2/Makefile \
 		 docs/Makefile lib/Makefile util/Makefile \
 		 grub/Makefile netboot/Makefile util/grub-crypt \
 		 util/grub-image util/grub-install util/grub-md5-crypt \
+		 util/grub-set-default \
 		 util/grub-terminfo])
 AC_OUTPUT
