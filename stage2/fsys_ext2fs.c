@@ -360,7 +360,12 @@ struct ext4_extent_header
 #define EXT2_ADDR_PER_BLOCK(s)          (EXT2_BLOCK_SIZE(s) / sizeof (__u32))
 #define EXT2_ADDR_PER_BLOCK_BITS(s)		(log2(EXT2_ADDR_PER_BLOCK(s)))
 
-#define EXT2_INODE_SIZE(s)		(SUPERBLOCK->s_inode_size)
+#define EXT2_GOOD_OLD_REV	0	/* The good old (original) format */
+#define EXT2_DYNAMIC_REV	1	/* V2 format w/ dynamic inode sizes */
+#define EXT2_GOOD_OLD_INODE_SIZE 128
+#define EXT2_INODE_SIZE(s)	(((s)->s_rev_level == EXT2_GOOD_OLD_REV) ? \
+				EXT2_GOOD_OLD_INODE_SIZE : \
+				(s)->s_inode_size)
 #define EXT2_INODES_PER_BLOCK(s)	(EXT2_BLOCK_SIZE(s)/EXT2_INODE_SIZE(s))
 
 /* linux/ext2_fs.h */
