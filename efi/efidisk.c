@@ -175,6 +175,37 @@ add_device (struct grub_efidisk_data **devices, struct grub_efidisk_data *d)
   (*p) = n;
 }
 
+/* Find the parent device.  */
+static struct grub_efidisk_data *
+find_parent_device (struct grub_efidisk_data *devices,
+		    struct grub_efidisk_data *d)
+{
+  grub_efi_device_path_t *dp, *ldp;
+  struct grub_efidisk_data *parent;
+
+  dp = duplicate_device_path (d->device_path);
+  if (! dp)
+    return 0;
+
+  ldp = find_last_device_path (dp);
+  ldp->type = GRUB_EFI_END_DEVICE_PATH_TYPE;
+  ldp->subtype = GRUB_EFI_END_ENTIRE_DEVICE_PATH_SUBTYPE;
+  ldp->length[0] = sizeof (*ldp);
+  ldp->length[1] = 0;
+
+  for (parent = devices; parent; parent = parent->next)
+    {
+      if (parent == d)
+	continue;  /* ignore itself */
+
+      if (compare_device_paths (parent->device_path, dp) == 0)
+	break;
+    }
+
+  grub_free (dp);
+  return parent;
+}
+
 /* Name the devices.  */
 static void
 name_devices (struct grub_efidisk_data *devices)
@@ -190,6 +221,55 @@ name_devices (struct grub_efidisk_data *devices)
       dp = d->last_device_path;
       if (! dp)
 	continue;
+
+      if (GRUB_EFI_DEVICE_PATH_TYPE (dp) == GRUB_EFI_MEDIA_DEVICE_PATH_TYPE)
+	{
+	  int is_hard_drive = 0;
+
+	  switch (GRUB_EFI_DEVICE_PATH_SUBTYPE (dp))
+	    {
+	    case GRUB_EFI_HARD_DRIVE_DEVICE_PATH_SUBTYPE:
+	      is_hard_drive = 1;
+	      /* fall through */
+
+	    case GRUB_EFI_CDROM_DEVICE_PATH_SUBTYPE:
+	      {
+		struct grub_efidisk_data *parent, *parent2;
+
+		parent = find_parent_device (devices, d);
+		if (!parent)
+		  break;  /* skip orphaned partition */
+
+		parent2 = find_parent_device (devices, parent);
+		if (parent2)
+		  {
+		    /* skip subpartition */
+		    d->last_device_path = 0;  /* mark itself as used */
+		    break;
+		  }
+
+		if (!parent->last_device_path)
+		  {
+		    d->last_device_path = 0;
+		    break;
+		  }
+
+		if (is_hard_drive)
+		  add_device (&hd_devices, parent);
+		else
+		  add_device (&cd_devices, parent);
+
+		parent->last_device_path = 0;  /* mark the parent as used */
+	      }
+
+	      d->last_device_path = 0;  /* mark itself as used */
+	      break;
+
+	    default:
+	      /* For now, ignore the others.  */
+	      break;
+	    }
+	}
 
       m = d->block_io->media;
       if (GRUB_EFI_DEVICE_PATH_TYPE(dp) == GRUB_EFI_MESSAGING_DEVICE_PATH_TYPE)
