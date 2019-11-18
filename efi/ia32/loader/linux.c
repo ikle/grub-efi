@@ -221,6 +221,7 @@ big_linux_boot (void)
 
   params = real_mode_mem;
 
+  graphics_init();
   graphics_set_kernel_params (params);
 
   if (grub_efi_get_memory_map (&map_key, &desc_size, &desc_version) <= 0)

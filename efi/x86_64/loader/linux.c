@@ -290,6 +290,7 @@ big_linux_boot (void)
 
   params = real_mode_mem;
 
+  graphics_init();
   graphics_set_kernel_params (params);
 
   grub_efi_disable_network();
