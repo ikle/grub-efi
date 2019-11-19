@@ -1050,6 +1050,16 @@ int check_password(char *entered, char* expected, password_t type);
 
 char *sha256_crypt (const char *key, const char *salt);
 char *sha512_crypt (const char *key, const char *salt);
+
+struct hash {
+  unsigned len;
+
+  void (*init) (void);
+  void (*update) (const void *data, unsigned len);
+  const void *(*finish) (void);
+};
+
+extern const struct hash md5_hash, sha256_hash, sha512_hash;
 #endif
 
 void init_bios_info (void);

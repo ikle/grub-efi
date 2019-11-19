@@ -332,6 +332,35 @@ sha512_process_bytes (const void *buffer, size_t len, struct sha512_ctx *ctx)
     }
 }
 
+/* Classic crypto interface */
+
+static struct sha512_ctx state;
+
+static void sha512_init (void)
+{
+  sha512_init_ctx (&state);
+}
+
+static void sha512_update (const void *data, unsigned len)
+{
+  sha512_process_bytes (data, len, &state);
+}
+
+static const void *sha512_finish (void)
+{
+  static unsigned char result[64]
+    __attribute__ ((__aligned__ (__alignof__ (uint64_t))));
+
+  return sha512_finish_ctx (&state, result);
+}
+
+const struct hash sha512_hash = {
+  .len    = 64,
+  .init   = &sha512_init,
+  .update = &sha512_update,
+  .finish = &sha512_finish,
+};
+
 
 /* Define our magic string to mark salt for SHA512 "encryption"
    replacement.  */

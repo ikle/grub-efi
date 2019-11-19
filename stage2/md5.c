@@ -22,21 +22,12 @@
  */
 
 #include <md5.h>
-#ifndef TEST
-# include <shared.h>
-#endif
+#include <shared.h>
 
 #ifdef TEST
 # include <string.h>
 # define USE_MD5_PASSWORDS
-# define USE_MD5
 #endif
-
-#ifdef USE_MD5_PASSWORDS
-# define USE_MD5
-#endif
-
-#ifdef USE_MD5
 
 #define cpu_to_le32(x) (x)
 #define le32_to_cpu(x) cpu_to_le32(x)
@@ -141,16 +132,15 @@ md5_transform (const unsigned char block[64])
   state[3] += d;
 }
 
-static void
-md5_init(void)
+static void md5_init (void)
 {
   memcpy ((char *) state, (char *) initstate, sizeof (initstate));
   length = 0;
 }
 
-static void
-md5_update (const char *input, int inputlen)
+static void md5_update (const void *data, unsigned inputlen)
 {
+  const char *input = data;
   int buflen = length & 63;
   length += inputlen;
   if (buflen + inputlen < 64) 
@@ -174,8 +164,7 @@ md5_update (const char *input, int inputlen)
   buflen = inputlen;
 }
 
-static unsigned char *
-md5_final()
+static const void *md5_final (void)
 {
   int i, buflen = length & 63;
 
@@ -194,8 +183,16 @@ md5_final()
 
   for (i = 0; i < 4; i++)
     state[i] = cpu_to_le32 (state[i]);
-  return (unsigned char *) state;
+
+  return state;
 }
+
+const struct hash md5_hash = {
+  .len    = 16,
+  .init   = &md5_init,
+  .update = &md5_update,
+  .finish = &md5_final,
+};
 
 #ifdef USE_MD5_PASSWORDS
 /* If CHECK is true, check a password for correctness. Returns 0
@@ -212,7 +209,7 @@ md5_password (const char *key, char *crypted, int check)
   int saltlen;
   int i, n;
   unsigned char alt_result[16];
-  unsigned char *digest;
+  const unsigned char *digest;
 
   if (check)
     {
@@ -323,7 +320,7 @@ md5_password (const char *key, char *crypted, int check)
 #endif
 
 #ifdef TEST
-static char *
+static const char *
 md5 (const char *input) 
 {
   memcpy ((char *) state, (char *) initstate, sizeof (initstate));
@@ -336,7 +333,7 @@ static void
 test (char *buffer, char *expected) 
 {
   char result[16 * 3 +1];
-  unsigned char* digest = md5 (buffer);
+  const unsigned char *digest = md5 (buffer);
   int i;
 
   for (i=0; i < 16; i++)
@@ -378,6 +375,4 @@ main (void)
     printf ("Password OK\n");
   return 0;
 }
-#endif
-
 #endif

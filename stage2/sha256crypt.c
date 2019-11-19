@@ -285,6 +285,35 @@ sha256_process_bytes (const void *buffer, size_t len, struct sha256_ctx *ctx)
     }
 }
 
+/* Classic crypto interface */
+
+static struct sha256_ctx state;
+
+static void sha256_init (void)
+{
+  sha256_init_ctx (&state);
+}
+
+static void sha256_update (const void *data, unsigned len)
+{
+  sha256_process_bytes (data, len, &state);
+}
+
+static const void *sha256_finish (void)
+{
+  static unsigned char result[32]
+    __attribute__ ((__aligned__ (__alignof__ (uint32_t))));
+
+  return sha256_finish_ctx (&state, result);
+}
+
+const struct hash sha256_hash = {
+  .len    = 32,
+  .init   = &sha256_init,
+  .update = &sha256_update,
+  .finish = &sha256_finish,
+};
+
 
 /* Define our magic string to mark salt for SHA256 "encryption"
    replacement.  */
