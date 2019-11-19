@@ -3,3 +3,9 @@ Makefile
 .deps
 *.a
 *.o
+*_eltorito
+*_stage1_5
+pre_stage2
+stage2
+stage2_size.h
+start

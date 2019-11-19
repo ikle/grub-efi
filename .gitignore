@@ -8,3 +8,7 @@ config.h.in
 config.log
 config.status
 stamp-h1
+*.swp
+*.o
+*.a
+*.exec
