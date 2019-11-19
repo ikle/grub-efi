@@ -2243,7 +2243,7 @@ install_func (char *arg, int flags)
   /* Read Stage 1.  */
   is_open = grub_open (stage1_file);
   if (! is_open
-      || ! grub_read (stage1_buffer, SECTOR_SIZE) == SECTOR_SIZE)
+      || grub_read (stage1_buffer, SECTOR_SIZE) != SECTOR_SIZE)
     goto fail;
 
   /* Read the old sector from DEST_DEV.  */
