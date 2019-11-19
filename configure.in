@@ -181,6 +181,11 @@ LIBGCC=$($CC $CFLAGS -static-libgcc -print-libgcc-file-name)
 AC_SUBST(LIBGCC)
 
 LOADER_LDFLAGS="-Wl,--build-id=none ${LIBGCC}"
+
+if test "x$platform" = xpc; then
+  LOADER_LDFLAGS="$LOADER_LDFLAGS -static"
+fi
+
 AC_SUBST(LOADER_LDFLAGS)
 
 if test "x$platform" = xefi; then
