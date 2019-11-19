@@ -565,6 +565,7 @@ typedef enum
   ERR_DEV_NEED_INIT,
   ERR_NO_DISK_SPACE,
   ERR_NUMBER_OVERFLOW,
+  ERR_BAD_CHECKSUM,
 
   MAX_ERR_NUM
 } grub_error_t;
@@ -1013,6 +1014,10 @@ int grub_seek (int offset);
 
 /* Close a file.  */
 void grub_close (void);
+
+/* Integrity checker. */
+int check_init (const char *conf);
+int check_file (const char *filename);
 
 /* List the contents of the directory that was opened with GRUB_OPEN,
    printing all completions. */

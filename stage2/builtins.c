@@ -1786,6 +1786,23 @@ static struct builtin builtin_halt =
 };
 
 
+/* hash */
+static int
+hash_func (char *arg, int flags)
+{
+  return check_init (arg) ? 0 : 1;
+}
+
+static struct builtin builtin_hash =
+{
+  "hash",
+  hash_func,
+  BUILTIN_CMDLINE | BUILTIN_HELP_LIST,
+  "hash (md5|sha256|sha512) HASH",
+  "Check integrity of next kernel, initrd or Multiboot module."
+};
+
+
 /* help */
 #define MAX_SHORT_DOC_LEN	39
 #define MAX_LONG_DOC_LEN	66
@@ -2051,7 +2068,7 @@ initrd_func (char *arg, int flags)
     {
     case KERNEL_TYPE_LINUX:
     case KERNEL_TYPE_BIG_LINUX:
-      if (! load_initrd (arg))
+      if (!check_file (arg) || !load_initrd (arg))
 	return 1;
       break;
 
@@ -2750,6 +2767,10 @@ kernel_func (char *arg, int flags)
 
   /* Copy the command-line to MB_CMDLINE.  */
   grub_memmove (mb_cmdline, arg, len + 1);
+
+  if (!check_file (arg))
+    return 1;
+
   kernel_type = load_image (arg, mb_cmdline, suggested_type, load_flags);
   if (kernel_type == KERNEL_TYPE_NONE)
     return 1;
@@ -2959,14 +2980,15 @@ module_func (char *arg, int flags)
 	  return 1;
 	}
       grub_memmove (mb_cmdline, arg, len + 1);
-      if (! load_module (arg, mb_cmdline))
+
+      if (!check_file (arg) || !load_module (arg, mb_cmdline))
 	return 1;
       mb_cmdline += len + 1;
       break;
 
     case KERNEL_TYPE_LINUX:
     case KERNEL_TYPE_BIG_LINUX:
-      if (! load_initrd (arg))
+      if (!check_file (arg) || !load_initrd (arg))
 	return 1;
       break;
 
@@ -5262,6 +5284,7 @@ struct builtin *builtin_table[] =
   &builtin_fstest,
   &builtin_geometry,
   &builtin_halt,
+  &builtin_hash,
   &builtin_help,
   &builtin_hiddenmenu,
   &builtin_hide,

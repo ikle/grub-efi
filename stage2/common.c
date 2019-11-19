@@ -52,6 +52,7 @@ char *err_list[] =
 {
   [ERR_NONE] = 0,
   [ERR_BAD_ARGUMENT] = "Invalid argument",
+  [ERR_BAD_CHECKSUM] = "File integrity check failed",
   [ERR_BAD_FILENAME] =
   "Filename must be either an absolute pathname or blocklist",
   [ERR_BAD_FILETYPE] = "Bad file or directory type",
