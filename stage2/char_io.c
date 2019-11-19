@@ -205,7 +205,6 @@ static void write_str(char **str, char *s, int *count)
         int _mult = is_hex ? 16 : 10;                               \
         char _a = is_cap ? 'A' : 'a';                               \
 	int _pad = num_pad_chars; \
-		    char hex[] = "0123456789abcdef"; \
         memset((buf), '\0', sizeof ((buf)));			    \
         if (!(_nval > 0LL))                                         \
             _negative = 1;                                          \
@@ -253,7 +252,7 @@ grub_vsprintf (char *str, const char *fmt, va_list args)
     if (!c)
         return 0;
 
-    int is_fmt = 0, is_long = 0, is_signed = 1, is_cap = 0, is_zero_padded = 0;
+    int is_fmt = 0, is_long = 0, is_cap = 0, is_zero_padded = 0;
     int num_pad_chars = 0;
     int restart = 1;
     do {
@@ -262,7 +261,6 @@ grub_vsprintf (char *str, const char *fmt, va_list args)
             is_fmt = 0;
             is_long = 0;
             is_cap = 0;
-            is_signed = 1;
 	    is_zero_padded = 0;
 	    num_pad_chars = 0;
             buf[0] = '\0';
@@ -381,8 +379,6 @@ grub_vsprintf (char *str, const char *fmt, va_list args)
                 is_cap = 1;
             case 'x':
 	    	if (num_pad_chars == 2) {
-		    int i;
-		    char hex[] = "0123456789abcdef";
 		    uint_arg = va_arg(args, unsigned int);
 		    uchar_arg = uint_arg & 0xff;
 		    format_ascii(buf, uchar_arg, 1, is_cap, num_pad_chars);
@@ -1541,8 +1537,8 @@ grub_strncasecmp(const char *s0, const char *s1, int n)
     if (--n == 0 || c0 == '\0')
       break;
 
-    *s0++;
-    *s1++;
+    s0++;
+    s1++;
   } while (c0 == c1);
 
   return (c0 > c1 ? 1 : c0 < c1 ? -1 : 0);

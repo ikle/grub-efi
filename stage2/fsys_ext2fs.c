@@ -594,10 +594,9 @@ static int
 ext4fs_block_map (int logical_block)
 {
   struct ext4_extent_header *eh;
-  struct ext4_extent *ex, *extent;
-  struct ext4_extent_idx *ei, *index;
+  struct ext4_extent *ex;
+  struct ext4_extent_idx *ei;
   int depth;
-  int i;
 
 #ifdef E2DEBUG
   unsigned char *i;

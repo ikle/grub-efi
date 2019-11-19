@@ -202,7 +202,7 @@ blocklist_read_helper (int sector, int offset, int length)
     if (*start_sector + *num_sectors == sector
       && offset == 0 && *last_length == sector_size)
     {
-      *num_sectors++;
+      num_sectors++;
       *last_length = length;
       return;
     }
@@ -219,7 +219,7 @@ blocklist_read_helper (int sector, int offset, int length)
       else
         grub_printf ("%s%d[0-%d]", *num_entries ? "," : "",
           *start_sector - part_start, *last_length);
-      *num_entries++;
+      num_entries++;
       *num_sectors = 0;
     }
   }
@@ -228,7 +228,7 @@ blocklist_read_helper (int sector, int offset, int length)
   {
     grub_printf("%s%d[%d-%d]", *num_entries ? "," : "",
           sector-part_start, offset, offset+length);
-    *num_entries++;
+    num_entries++;
   }
   else
   {
@@ -2166,10 +2166,9 @@ install_func (char *arg, int flags)
   char *config_filename = stage2_second_buffer + SECTOR_SIZE;
   char *dummy = config_filename + SECTOR_SIZE;
   int new_drive = GRUB_INVALID_DRIVE;
-  int dest_drive, dest_partition, dest_sector;
+  int dest_drive, dest_partition;
   int src_drive, src_partition, src_part_start;
   int i;
-  struct geometry dest_geom, src_geom;
   int *saved_sector = &install_func_context.saved_sector;
   int stage2_first_sector, stage2_second_sector;
   char *ptr;
@@ -2256,8 +2255,6 @@ install_func (char *arg, int flags)
   /* Store the information for the destination device.  */
   dest_drive = current_drive;
   dest_partition = current_partition;
-  dest_geom = buf_geom;
-  dest_sector = part_start;
 
   /* Copy the possible DOS BPB, 59 bytes at byte offset 3.  */
   grub_memmove (stage1_buffer + BOOTSEC_BPB_OFFSET,
@@ -2301,7 +2298,6 @@ install_func (char *arg, int flags)
   src_drive = current_drive;
   src_partition = current_partition;
   src_part_start = part_start;
-  src_geom = buf_geom;
   
   if (! new_drive)
     new_drive = src_drive;
