@@ -46,7 +46,7 @@ grub.efi: grub.so
 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel \
                    -j .rela -j .reloc --target=$(GRUBEFI_FORMAT) $^ $@
 
-grub.so: $(GRUBSO_OBJS) $(GRUBSO_LIBS) @LIBGNUEFI@
+grub.so: $(GRUBSO_OBJS) $(GRUBSO_LIBS) @LIBEFI@ @LIBGNUEFI@
 	$(LD) -o $@ $(GRUBSO_LD_FLAGS) $^
 	echo '-------------- unresolved symbols ---------------------'
 	! nm $@ | grep -iw u
