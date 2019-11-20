@@ -112,6 +112,7 @@ struct term_entry term_table[] =
 
 /* This must be console.  */
 struct term_entry *current_term = term_table;
+unsigned long current_term_map = 1;  /* use console by default */
 
 int max_lines = 24;
 int count_lines = -1;

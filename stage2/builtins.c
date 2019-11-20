@@ -4532,10 +4532,10 @@ terminal_func (char *arg, int flags)
   struct term_entry *prev_term = current_term;
   int to = -1;
   int lines = 0;
-  int no_message = 0;
   unsigned long term_flags = 0;
   /* XXX: Assume less than 32 terminals.  */
   unsigned long term_bitmap = 0;
+  unsigned i;
 
   /* Get GNU-style long options.  */
   while (1)
@@ -4569,7 +4569,7 @@ terminal_func (char *arg, int flags)
 	    }
 	}
       else if (grub_memcmp (arg, "--silent", sizeof ("--silent") - 1) == 0)
-	no_message = 1;
+	/* no_message = 1 */;
       else
 	break;
 
@@ -4589,7 +4589,6 @@ terminal_func (char *arg, int flags)
 
   while (*arg)
     {
-      int i;
       char *next = skip_to (0, arg);
       
       nul_terminate (arg);
@@ -4621,66 +4620,17 @@ terminal_func (char *arg, int flags)
       arg = next;
     }
 
-  /* If multiple terminals are specified, wait until the user pushes any
-     key on one of the terminals.  */
+  for (i = 0; term_table[i].name != NULL; ++i)
+    if (term_bitmap & (1 << i))
+      term_table[i].flags = term_flags;
+
+  current_term_map = term_bitmap;
+
+  /* If multiple terminals are specified, use terminal multiplexer */
   if (term_bitmap & ~(1 << default_term))
-    {
-      int time1, time2 = -1;
-
-      /* XXX: Disable the pager.  */
-      count_lines = -1;
-      
-      /* Get current time.  */
-      while ((time1 = getrtsecs ()) == 0xFF)
-	;
-
-      /* Wait for a key input.  */
-      while (to)
-	{
-	  int i;
-
-	  for (i = 0; term_table[i].name; i++)
-	    {
-	      if (term_bitmap & (1 << i))
-		{
-		  if (term_table[i].checkkey () >= 0)
-		    {
-		      (void) term_table[i].getkey ();
-		      default_term = i;
-		      
-		      goto end;
-		    }
-		}
-	    }
-	  
-	  /* Prompt the user, once per sec.  */
-	  if ((time1 = getrtsecs ()) != time2 && time1 != 0xFF)
-	    {
-	      if (! no_message)
-		{
-		  /* Need to set CURRENT_TERM to each of selected
-		     terminals.  */
-		  for (i = 0; term_table[i].name; i++)
-		    if (term_bitmap & (1 << i))
-		      {
-			current_term = term_table + i;
-			grub_printf ("\rPress any key to continue.\n");
-		      }
-		  
-		  /* Restore CURRENT_TERM.  */
-		  current_term = prev_term;
-		}
-	      
-	      time2 = time1;
-	      if (to > 0)
-		to--;
-	    }
-	}
-    }
-
- end:
-  current_term = term_table + default_term;
-  current_term->flags = term_flags;
+      current_term = &mux_term;
+  else
+      current_term = term_table + default_term;
 
   if (lines)
     max_lines = lines;

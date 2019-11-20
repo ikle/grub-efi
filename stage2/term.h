@@ -101,6 +101,10 @@ extern struct term_entry term_table[];
 /* This points to the current terminal. This is useful, because only
    a single terminal is enabled normally.  */
 extern struct term_entry *current_term;
+extern unsigned long current_term_map;  /* assume less than 33 terminals */
+
+/* Terminal Multiplexer.  */
+extern struct term_entry mux_term;
 
 #endif /* ! STAGE1_5 */
 
