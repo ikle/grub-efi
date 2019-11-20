@@ -157,6 +157,8 @@ void graphics_end(void);
 
 int hex(int v);
 void graphics_set_palette(int idx, int red, int green, int blue);
+#else
+static inline int graphics_init (void) { return 0; }
 #endif /* SUPPORT_GRAPHICS */
 
 #endif /* ! GRUB_TERM_HEADER */
