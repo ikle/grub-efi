@@ -7,10 +7,24 @@
 
 #include <shared.h>
 
+#ifdef __UINT64_TYPE__
+typedef __UINT64_TYPE__ uint64_t;
+#else
 typedef unsigned long long uint64_t;
-typedef size_t uintptr_t;
-#define alloca(SIZE) (__builtin_alloca (SIZE))
+#endif
+
+#ifndef UINT64_C
 #define UINT64_C(X) X ## ULL
+#endif
+
+#ifdef __UINTPTR_TYPE__
+typedef __UINTPTR_TYPE__ uintptr_t;
+#else
+typedef size_t uintptr_t;
+#endif
+
+#define alloca(SIZE) (__builtin_alloca (SIZE))
+
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
