@@ -190,7 +190,7 @@ AC_DEFUN([grub_CHECK_START_SYMBOL],
 [AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if start is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_start_symbol,
-[AC_TRY_LINK([], [asm ("incl start")],
+[AC_TRY_LINK([], [asm ("jmp start")],
    grub_cv_check_start_symbol=yes,
    grub_cv_check_start_symbol=no)])
 
@@ -209,7 +209,7 @@ AC_DEFUN([grub_CHECK_USCORE_START_SYMBOL],
 [AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if _start is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_uscore_start_symbol,
-[AC_TRY_LINK([], [asm ("incl _start")],
+[AC_TRY_LINK([], [asm ("jmp _start")],
    grub_cv_check_uscore_start_symbol=yes,
    grub_cv_check_uscore_start_symbol=no)])
 
@@ -228,7 +228,7 @@ AC_DEFUN([grub_CHECK_USCORE_USCORE_BSS_START_SYMBOL],
 [AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if __bss_start is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_uscore_uscore_bss_start_symbol,
-[AC_TRY_LINK([], [asm ("incl __bss_start")],
+[AC_TRY_LINK([], [asm ("jmp __bss_start")],
    grub_cv_check_uscore_uscore_bss_start_symbol=yes,
    grub_cv_check_uscore_uscore_bss_start_symbol=no)])
 
@@ -247,7 +247,7 @@ AC_DEFUN([grub_CHECK_EDATA_SYMBOL],
 [AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if edata is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_edata_symbol,
-[AC_TRY_LINK([], [asm ("incl edata")],
+[AC_TRY_LINK([], [asm ("jmp edata")],
    grub_cv_check_edata_symbol=yes,
    grub_cv_check_edata_symbol=no)])
 
@@ -266,7 +266,7 @@ AC_DEFUN([grub_CHECK_USCORE_EDATA_SYMBOL],
 [AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if _edata is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_uscore_edata_symbol,
-[AC_TRY_LINK([], [asm ("incl _edata")],
+[AC_TRY_LINK([], [asm ("jmp _edata")],
    grub_cv_check_uscore_edata_symbol=yes,
    grub_cv_check_uscore_edata_symbol=no)])
 
@@ -285,7 +285,7 @@ AC_DEFUN([grub_CHECK_END_SYMBOL],
 [AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if end is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_end_symbol,
-[AC_TRY_LINK([], [asm ("incl end")],
+[AC_TRY_LINK([], [asm ("jmp end")],
    grub_cv_check_end_symbol=yes,
    grub_cv_check_end_symbol=no)])
 
@@ -304,7 +304,7 @@ AC_DEFUN([grub_CHECK_USCORE_END_SYMBOL],
 [AC_REQUIRE([AC_PROG_CC])
 AC_MSG_CHECKING([if _end is defined by the compiler])
 AC_CACHE_VAL(grub_cv_check_uscore_end_symbol,
-[AC_TRY_LINK([], [asm ("incl _end")],
+[AC_TRY_LINK([], [asm ("jmp _end")],
    grub_cv_check_uscore_end_symbol=yes,
    grub_cv_check_uscore_end_symbol=no)])
 
