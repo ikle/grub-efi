@@ -267,7 +267,7 @@ int fill_input_buf (int nowait)
 {
   int i;
 
-  for (i = 0; i < 10000 && npending < sizeof (input_buf); i++)
+  for (i = 0; i < 500 && npending < sizeof (input_buf); i++)
     {
       int c;
 
