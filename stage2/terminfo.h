@@ -43,9 +43,9 @@ char *ti_unescape_string (const char *in);
 void ti_set_term (const struct terminfo *new);
 void ti_get_term (struct terminfo *copy);
 
-void ti_cursor_address (int x, int y);
-void ti_clear_screen (void);
-void ti_enter_standout_mode (void);
-void ti_exit_standout_mode (void);
+const char *ti_cursor_address (int x, int y);
+const char *ti_clear_screen (void);
+const char *ti_enter_standout_mode (void);
+const char *ti_exit_standout_mode (void);
 
 #endif /* ! GRUB_TERMCAP_HEADER */

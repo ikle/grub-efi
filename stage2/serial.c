@@ -399,11 +399,17 @@ serial_getxy (void)
   return (serial_x << 8) | serial_y;
 }
 
+static void serial_putstr (const char *s)
+{
+  for (; *s != '\0'; ++s)
+    serial_putchar (*s);
+}
+
 void
 serial_gotoxy (int x, int y)
 {
   keep_track = 0;
-  ti_cursor_address (x, y);
+  serial_putstr (ti_cursor_address (x, y));
   keep_track = 1;
   
   serial_x = x;
@@ -414,7 +420,7 @@ void
 serial_cls (void)
 {
   keep_track = 0;
-  ti_clear_screen ();
+  serial_putstr (ti_clear_screen ());
   keep_track = 1;
   
   serial_x = serial_y = 0;
@@ -425,9 +431,9 @@ serial_setcolorstate (color_state state)
 {
   keep_track = 0;
   if (state == COLOR_STATE_HIGHLIGHT)
-    ti_enter_standout_mode ();
+    serial_putstr (ti_enter_standout_mode ());
   else
-    ti_exit_standout_mode ();
+    serial_putstr (ti_exit_standout_mode ());
   keep_track = 1;
 }
 

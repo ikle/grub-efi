@@ -216,31 +216,31 @@ ti_escape_string (const char *in)
 }
 
 /* move the cursor to the given position starting with "0". */
-void
+const char *
 ti_cursor_address (int x, int y)
 {
-  grub_putstr (grub_tparm (term.cursor_address, y, x));
+  return grub_tparm (term.cursor_address, y, x);
 }
 
 /* clear the screen. */
-void 
+const char *
 ti_clear_screen (void)
 {
-  grub_putstr (grub_tparm (term.clear_screen));
+  return grub_tparm (term.clear_screen);
 }
 
 /* enter reverse video */
-void 
+const char *
 ti_enter_standout_mode (void)
 {
-  grub_putstr (grub_tparm (term.enter_standout_mode));
+  return grub_tparm (term.enter_standout_mode);
 }
 
 /* exit reverse video */
-void 
+const char *
 ti_exit_standout_mode (void)
 {
-  grub_putstr (grub_tparm (term.exit_standout_mode));
+  return grub_tparm (term.exit_standout_mode);
 }
 
 /* set the current terminal emulation to use */
