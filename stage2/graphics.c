@@ -292,14 +292,18 @@ static int xpm_open(char *s) {
  * 640x480. */
 int read_image(char *s)
 {
+    int image = *s != '\0';
     char buf[32], pal[16];
     unsigned char c, base, mask, *s1, *s2, *s4, *s8;
     unsigned i, len, idx, colors, x, y, width, height;
 
-    if (!xpm_open(s))
+    if (image && !xpm_open(s))
         return 0;
 
     saved_videomode = set_videomode(0x12);
+
+    if (!image)
+        goto no_palette;
 
     /* parse info */
     while (grub_read(&c, 1)) {
@@ -369,8 +373,7 @@ int read_image(char *s)
         }
     }
 
-    x = y = len = 0;
-
+no_palette:
     s1 = (unsigned char*)VSHADOW1;
     s2 = (unsigned char*)VSHADOW2;
     s4 = (unsigned char*)VSHADOW4;
@@ -378,6 +381,11 @@ int read_image(char *s)
 
     for (i = 0; i < 38400; i++)
         s1[i] = s2[i] = s4[i] = s8[i] = 0;
+
+    if (!image)
+        goto no_data;
+
+    x = y = len = 0;
 
     /* parse xpm data */
     while (y < height) {
@@ -419,6 +427,7 @@ int read_image(char *s)
 
     grub_close();
 
+no_data:
     graphics_set_palette(0, (background >> 16), (background >> 8) & 63, 
                 background & 63);
     graphics_set_palette(15, (foreground >> 16), (foreground >> 8) & 63, 
