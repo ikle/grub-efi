@@ -189,16 +189,9 @@ void graphics_gotoxy(int x, int y) {
 
 void graphics_cls(void) {
     int i;
-    unsigned char *mem, *s1, *s2, *s4, *s8;
 
     graphics_cursor(0);
     graphics_gotoxy(x0, y0);
-
-    mem = (unsigned char*)VIDEOMEM;
-    s1 = (unsigned char*)VSHADOW1;
-    s2 = (unsigned char*)VSHADOW2;
-    s4 = (unsigned char*)VSHADOW4;
-    s8 = (unsigned char*)VSHADOW8;
 
     for (i = 0; i < 80 * 30; i++)
         text[i] = ' ';
@@ -208,19 +201,19 @@ void graphics_cls(void) {
 
     /* plano 1 */
     MapMask(1);
-    grub_memcpy(mem, s1, 38400);
+    grub_memcpy(VIDEOMEM, VSHADOW1, 38400);
 
     /* plano 2 */
     MapMask(2);
-    grub_memcpy(mem, s2, 38400);
+    grub_memcpy(VIDEOMEM, VSHADOW2, 38400);
 
     /* plano 3 */
     MapMask(4);
-    grub_memcpy(mem, s4, 38400);
+    grub_memcpy(VIDEOMEM, VSHADOW4, 38400);
 
     /* plano 4 */
     MapMask(8);
-    grub_memcpy(mem, s8, 38400);
+    grub_memcpy(VIDEOMEM, VSHADOW8, 38400);
 
     MapMask(15);
  
