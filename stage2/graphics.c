@@ -103,6 +103,13 @@ char *graphics_get_splash(void) {
     return splashimage;
 }
 
+static void graphics_init_palette(int fg, int bg, int border)
+{
+    graphics_set_palette(0,  (bg >> 16), (bg >> 8) & 63, bg & 63);
+    graphics_set_palette(15, (fg >> 16), (fg >> 8) & 63, fg & 63);
+    graphics_set_palette(17, (border >> 16), (border >> 8) & 63, border & 63);
+}
+
 /* Initialize a vga16 graphics display with the palette based off of
  * the image in splashimage.  */
 int graphics_init()
@@ -113,6 +120,7 @@ int graphics_init()
         return 0;
     }
 
+    graphics_init_palette(foreground, background, border);
     font8x16 = (unsigned char*)graphics_get_font();
 
     graphics_inited = 1;
@@ -420,13 +428,6 @@ no_palette:
     grub_close();
 
 no_data:
-    graphics_set_palette(0, (background >> 16), (background >> 8) & 63, 
-                background & 63);
-    graphics_set_palette(15, (foreground >> 16), (foreground >> 8) & 63, 
-                foreground & 63);
-    graphics_set_palette(0x11, (border >> 16), (border >> 8) & 63, 
-                         border & 63);
-
     return 1;
 }
 
