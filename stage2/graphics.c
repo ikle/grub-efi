@@ -122,10 +122,11 @@ static void graphics_init_palette(int fg, int bg, int border)
  * the image in splashimage.  */
 int graphics_init()
 {
+    saved_videomode = set_videomode(0x12);
     graphics_init_shadow();
 
-    if (!read_image(splashimage)) {
-	current_term = term_table;
+    if (splashimage[0] != '\0' && !read_image(splashimage)) {
+        current_term = term_table;
         grub_printf("failed to read image\n");
         return 0;
     }
@@ -302,18 +303,12 @@ static int xpm_open(char *s) {
  * 640x480. */
 int read_image(char *s)
 {
-    int image = *s != '\0';
     char buf[32], pal[16];
     unsigned char c, base, mask, *s1, *s2, *s4, *s8;
     unsigned i, len, idx, colors, x, y, width, height;
 
-    if (image && !xpm_open(s))
+    if (!xpm_open(s))
         return 0;
-
-    saved_videomode = set_videomode(0x12);
-
-    if (!image)
-        goto no_palette;
 
     /* parse info */
     while (grub_read(&c, 1)) {
@@ -383,11 +378,7 @@ int read_image(char *s)
         }
     }
 
-no_palette:
     graphics_init_shadow();
-
-    if (!image)
-        goto no_data;
 
     x = y = len = 0;
 
@@ -430,8 +421,6 @@ no_palette:
     }
 
     grub_close();
-
-no_data:
     return 1;
 }
 
