@@ -2316,6 +2316,46 @@ VARIABLE(cursorBuf)
 
 	
 /*
+ * int is_vga_present(void)
+ */
+ENTRY(is_vga_present)
+	push	%edx
+	movw	0x463, %dx	/* get 6845 index register address */
+	cmpw	$0x3b4, %dx
+	je	1f
+	cmpw	$0x3d4, %dx
+	je	1f
+2:
+	xor	%eax, %eax
+	pop	%edx
+	ret
+1:
+	movb	$0xc, %al
+	outb	%al, %dx	/* request access to start address MSB */
+	jmp	1f
+1:
+	incw	%dx
+	inb	%dx, %al
+	jmp	1f
+1:
+	movb	%al, %ah
+	decw	%dx
+	movb	$0xd, %al	/* request access to start address LSB */
+	outb	%al, %dx
+	jmp	1f
+1:
+	incw	%dx
+	inb	%dx, %al
+	jmp	1f
+1:
+	notw	%ax
+	jz	2b		/* if start address == 0xffff */
+	xor	%eax, %eax
+	inc	%eax
+	pop	%edx
+	ret
+
+/*
  * int set_videomode(mode)
  * BIOS call "INT 10H Function 0h" to set video mode
  *	Call with	%ah = 0x0

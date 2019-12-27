@@ -122,6 +122,9 @@ static void graphics_init_palette(int fg, int bg, int border)
  * the image in splashimage.  */
 int graphics_init()
 {
+    if (!is_vga_present ())
+        return 0;
+
     saved_videomode = set_videomode(0x12);
     graphics_init_shadow();
 

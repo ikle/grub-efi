@@ -148,6 +148,7 @@ int hercules_setcursor (int on);
 extern int foreground, background, border, graphics_inited;
 
 void graphics_set_splash(char *splashfile);
+int is_vga_present(void);
 int set_videomode (int mode);
 void graphics_putchar (int c);
 int graphics_getxy(void);
