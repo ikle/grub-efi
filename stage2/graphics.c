@@ -103,6 +103,14 @@ char *graphics_get_splash(void) {
     return splashimage;
 }
 
+static void graphics_init_shadow(void)
+{
+    memset(VSHADOW1, 0, sizeof (VSHADOW1));
+    memset(VSHADOW2, 0, sizeof (VSHADOW2));
+    memset(VSHADOW4, 0, sizeof (VSHADOW4));
+    memset(VSHADOW8, 0, sizeof (VSHADOW8));
+}
+
 static void graphics_init_palette(int fg, int bg, int border)
 {
     graphics_set_palette(0,  (bg >> 16), (bg >> 8) & 63, bg & 63);
@@ -114,6 +122,8 @@ static void graphics_init_palette(int fg, int bg, int border)
  * the image in splashimage.  */
 int graphics_init()
 {
+    graphics_init_shadow();
+
     if (!read_image(splashimage)) {
 	current_term = term_table;
         grub_printf("failed to read image\n");
@@ -374,13 +384,7 @@ int read_image(char *s)
     }
 
 no_palette:
-    s1 = (unsigned char*)VSHADOW1;
-    s2 = (unsigned char*)VSHADOW2;
-    s4 = (unsigned char*)VSHADOW4;
-    s8 = (unsigned char*)VSHADOW8;
-
-    for (i = 0; i < 38400; i++)
-        s1[i] = s2[i] = s4[i] = s8[i] = 0;
+    graphics_init_shadow();
 
     if (!image)
         goto no_data;
