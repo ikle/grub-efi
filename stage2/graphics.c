@@ -104,8 +104,7 @@ char *graphics_get_splash(void) {
 }
 
 /* Initialize a vga16 graphics display with the palette based off of
- * the image in splashimage.  If the image doesn't exist, leave graphics
- * mode.  */
+ * the image in splashimage.  */
 int graphics_init()
 {
     if (!read_image(splashimage)) {
