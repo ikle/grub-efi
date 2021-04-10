@@ -212,11 +212,10 @@ name_devices (struct grub_efidisk_data *devices)
 {
   struct grub_efidisk_data *d;
 
-  /* Let's see what can be added more.  */
+  /* First, identify devices by media device paths.  */
   for (d = devices; d; d = d->next)
     {
       grub_efi_device_path_t *dp;
-      grub_efi_block_io_media_t *m;
 
       dp = d->last_device_path;
       if (! dp)
@@ -270,6 +269,17 @@ name_devices (struct grub_efidisk_data *devices)
 	      break;
 	    }
 	}
+    }
+
+  /* Let's see what can be added more.  */
+  for (d = devices; d; d = d->next)
+    {
+      grub_efi_device_path_t *dp;
+      grub_efi_block_io_media_t *m;
+
+      dp = d->last_device_path;
+      if (! dp)
+	continue;
 
       m = d->block_io->media;
       if (GRUB_EFI_DEVICE_PATH_TYPE(dp) == GRUB_EFI_MESSAGING_DEVICE_PATH_TYPE)
