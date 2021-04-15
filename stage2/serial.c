@@ -138,6 +138,9 @@ serial_hw_init (unsigned short port, unsigned int speed,
   unsigned short div = 0;
   unsigned char status = 0;
   
+  if (port == 0)
+    return 0;
+
   /* Turn off the interrupt.  */
   outb (port + UART_IER, 0);
 
