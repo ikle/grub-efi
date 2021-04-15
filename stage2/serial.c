@@ -155,8 +155,11 @@ serial_hw_init (unsigned short port, unsigned int speed,
 	break;
       }
   
-  if (div == 0)
+  if (div == 0) {
+    grub_printf ("E: unsupported baud rate %u for serial port %u\n",
+		 speed, port);
     return 0;
+  }
   
   outb (port + UART_DLL, div & 0xFF);
   outb (port + UART_DLH, div >> 8);
@@ -188,6 +191,7 @@ serial_hw_init (unsigned short port, unsigned int speed,
 
   /* FIXME: should check if the serial terminal was found.  */
   
+  grub_printf ("I: serial port %u initialized", port);
   return 1;
 }
 #endif /* ! defined (GRUB_UTIL) && ! defined (PLATFORM_EFI) */

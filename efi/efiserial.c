@@ -232,8 +232,11 @@ serial_hw_init (unsigned short port, unsigned int speed,
 
   devices = make_devices ();
   s = get_device (devices, port);
-  if (!s)
+  if (!s) {
+    grub_printf ("E: serial port %u not found\n", port);
     return 0;
+  }
+
   sio = s->serial_io;
   free_devices (devices);
 
@@ -242,13 +245,17 @@ serial_hw_init (unsigned short port, unsigned int speed,
   efi_stop_bits = efi_stop_bits_from_8250_LCR (stop_bit_len);
 
   status = Call_Service_1 (sio->reset, sio);
-  if (status != GRUB_EFI_SUCCESS)
+  if (status != GRUB_EFI_SUCCESS) {
+    grub_printf ("E: cannot reset serial port %u\n", port);
     return 0;
+  }
 
   status = Call_Service_7 (sio->set_attributes, sio, speed, 0, 0,
 			   efi_parity, efi_data_bits, efi_stop_bits);
-  if (status != GRUB_EFI_SUCCESS)
+  if (status != GRUB_EFI_SUCCESS) {
+    grub_printf ("E: cannot set attributes for serial port %u\n", port);
     return 0;
+  }
 
   serial_device = sio;
   /* Get rid of TERM_NEED_INIT from the serial terminal.  */
@@ -259,6 +266,7 @@ serial_hw_init (unsigned short port, unsigned int speed,
 	break;
       }
 
+  grub_printf ("I: serial port %u initialized\n", port);
   return 1;
 }
 
