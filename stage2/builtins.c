@@ -1010,7 +1010,8 @@ static int splashimage_func(char *arg, int flags) {
     /* filename can only be 64 characters due to our buffer size */
     if (strlen(arg) > 63)
 	return 1;
-    if (flags == BUILTIN_CMDLINE) {
+
+    if (arg[0] != 0 && flags == BUILTIN_CMDLINE) {
 	if (!grub_open(arg))
 	    return 1;
 	grub_close();
