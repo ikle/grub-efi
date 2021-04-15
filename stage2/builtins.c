@@ -3615,8 +3615,50 @@ real_root_func (char *arg, int attempt_mount)
 }
 
 static int
+is_file_exists (const char *path)
+{
+  if (grub_open ((char *) path))
+    {
+      grub_close();
+      return 1;
+    }
+
+  return 0;
+}
+
+static int
+find_marked_root (const char *label)
+{
+  const char *boot[] = {"(hd0,0)", "(hd1,0)", "(hd2,0)", "(hd3,0)", NULL};
+  int i;
+  char device[16];
+
+  for (i = 0; boot[i] != NULL; ++i)
+    {
+      errnum = 0;
+      grub_strncpy (device, boot[i], sizeof (device));
+
+      if (real_root_func (device, 1) == 0 && is_file_exists (label))
+	return 1;
+    }
+
+  return 0;
+}
+
+static int
 root_func (char *arg, int flags)
 {
+  if (arg[0] == '/' && find_marked_root (arg))
+    return 0;
+
+  if (grub_strcmp (arg, "edge-setup") == 0 &&
+      find_marked_root ("/boot/.this_is_edge_usb_installer_flash"))
+    return 0;
+
+  if (grub_strcmp (arg, "edge") == 0 &&
+      find_marked_root ("/boot/.this_is_edge_bootable_partition"))
+    return 0;
+
   return real_root_func (arg, 1);
 }
 
