@@ -18,6 +18,7 @@
 #endif
 
 int foreground = 0x00ffffff, background = 0; 
+int graphics_exists;
 int graphics_inited = 0;
 
 /* Convert a character which is a hex digit to the appropriate integer */
@@ -642,6 +643,7 @@ graphics_init(void)
         backend = backends[i];
         backend->graphics = graphics;
         if (backend->enable(backend)) {
+            graphics_exists = 1;
             graphics_inited = 1;
             graphics_set_splash_helper();
             return 1;

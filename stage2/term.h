@@ -145,7 +145,7 @@ int hercules_setcursor (int on);
 #endif
 
 #ifdef SUPPORT_GRAPHICS
-extern int foreground, background, border, graphics_inited;
+extern int foreground, background, border, graphics_exists, graphics_inited;
 
 void graphics_set_splash(char *splashfile);
 int is_vga_present(void);

@@ -33,6 +33,7 @@
 int saved_videomode;
 unsigned char *font8x16;
 
+int graphics_exists;
 int graphics_inited = 0;
 static char splashimage[64];
 
@@ -137,6 +138,7 @@ int graphics_init()
     graphics_init_palette(foreground, background, border);
     font8x16 = (unsigned char*)graphics_get_font();
 
+    graphics_exists = 1;
     graphics_inited = 1;
 
     /* make sure that the highlight color is set correctly */
