@@ -2810,6 +2810,8 @@ kernel_func (char *arg, int flags)
       return 1;
     }
 
+  grub_printf ("I: kernel cmdline = %s\n", mb_cmdline);
+
   kernel_type = load_image (arg, mb_cmdline, suggested_type, load_flags);
   if (kernel_type == KERNEL_TYPE_NONE)
     return 1;
@@ -4793,12 +4795,17 @@ terminal_func (char *arg, int flags)
 	    {
 	      if (term_table[i].flags & TERM_NEED_INIT)
 		{
+		  grub_printf ("W: %s is not initialized, ignoring it\n", arg);
 		  break;  /* silently ignore uninitialized device */
 		}
 	      
 	      if (default_term < 0)
-		default_term = i;
+		{
+		  grub_printf ("I: default terminal is %s now\n", arg);
+		  default_term = i;
+		}
 
+	      grub_printf ("I: added %s terminal\n", arg);
 	      term_bitmap |= (1 << i);
 	      break;
 	    }
