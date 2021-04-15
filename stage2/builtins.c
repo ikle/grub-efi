@@ -4600,8 +4600,7 @@ terminal_func (char *arg, int flags)
 	    {
 	      if (term_table[i].flags & TERM_NEED_INIT)
 		{
-		  errnum = ERR_DEV_NEED_INIT;
-		  return 1;
+		  break;  /* silently ignore uninitialized device */
 		}
 	      
 	      if (default_term < 0)
