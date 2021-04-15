@@ -1110,6 +1110,28 @@ static struct builtin builtin_background =
   "RR is red, GG is green, and BB blue. Numbers must be in hexadecimal."
 };
 
+static int
+opt_print_graphics (kernel_t type, char *to, int avail)
+{
+  char buf[32];
+  int len;
+
+  if (!graphics_exists)
+    return 0;
+
+  len = grub_sprintf (buf, "console=tty0 ");
+  grub_strncpy (to, buf, avail);
+  return len;
+}
+
+#else
+
+static int
+opt_print_graphics (kernel_t type, char *to, int avail)
+{
+  return 0;
+}
+
 #endif /* SUPPORT_GRAPHICS */
 
 
@@ -2686,6 +2708,44 @@ static struct builtin builtin_ioprobe =
 #endif /* ! PLATFORM_EFI */
 
 
+static int opt_print_graphics (kernel_t type, char *to, int avail);
+static int opt_print_serial   (kernel_t type, char *to, int avail);
+
+static int
+opt_parse_cmdline (kernel_t type, char *to, int avail, const char *arg)
+{
+  int total, len;
+
+  for (
+    total = 0;
+    arg[0] != 0;
+    total += len, to += len, avail -= len
+  )
+    if (grub_memcmp (arg, "@graphics", 9) == 0)
+      {
+	len = opt_print_graphics (type, to, avail);
+	arg += 9;
+      }
+    else if (grub_memcmp (arg, "@serial", 7) == 0)
+      {
+	len = opt_print_serial (type, to, avail);
+	arg += 7;
+      }
+    else
+      {
+	if (avail > 0)
+	  to[0] = arg[0];
+
+	len = 1;
+	arg += 1;
+      }
+
+  if (avail > 0)
+    to[0] = 0;
+
+  return total;
+}
+
 /* kernel */
 static int
 kernel_func (char *arg, int flags)
@@ -2738,19 +2798,18 @@ kernel_func (char *arg, int flags)
       /* Try the next.  */
       arg = skip_to (0, arg);
     }
-      
-  len = grub_strlen (arg);
 
   /* Reset MB_CMDLINE.  */
   mb_cmdline = (char *) MB_CMDLINE_BUF;
+
+  /* Copy the command-line to MB_CMDLINE.  */
+  len = opt_parse_cmdline (suggested_type, mb_cmdline, MB_CMDLINE_BUFLEN, arg);
   if (len + 1 > MB_CMDLINE_BUFLEN)
     {
       errnum = ERR_WONT_FIT;
       return 1;
     }
 
-  /* Copy the command-line to MB_CMDLINE.  */
-  grub_memmove (mb_cmdline, arg, len + 1);
   kernel_type = load_image (arg, mb_cmdline, suggested_type, load_flags);
   if (kernel_type == KERNEL_TYPE_NONE)
     return 1;
@@ -3800,10 +3859,22 @@ static struct builtin builtin_savedefault =
 
 #ifdef SUPPORT_SERIAL
 /* serial */
+struct serial_opts {
+  unsigned int speed;
+  int word_len;
+  int parity;
+};
+
+#define SERIAL_COUNT  4
+
+static struct serial_opts serial_opts[SERIAL_COUNT];
+static int serial_set[SERIAL_COUNT] = { -1, -1, -1 , -1 };
+
 static int
 serial_func (char *arg, int flags)
 {
-  unsigned short port = serial_hw_get_port (0);
+  int unit = 0;
+  unsigned short port = serial_hw_get_port (unit);
   unsigned int speed = 9600;
   int word_len = UART_8BITS_WORD;
   int parity = UART_NO_PARITY;
@@ -3817,12 +3888,11 @@ serial_func (char *arg, int flags)
       if (grub_memcmp (arg, "--unit=", sizeof ("--unit=") - 1) == 0)
 	{
 	  char *p = arg + sizeof ("--unit=") - 1;
-	  int unit;
 	  
 	  if (! safe_parse_maxint (&p, &unit))
 	    return 1;
 	  
-	  if (unit < 0 || unit > 3)
+	  if (unit < 0 || unit >= SERIAL_COUNT)
 	    {
 	      errnum = ERR_DEV_VALUES;
 	      return 1;
@@ -3931,6 +4001,13 @@ serial_func (char *arg, int flags)
       return 1;
     }
   
+  serial_opts[unit].speed        = speed;
+  serial_opts[unit].word_len     = word_len;
+  serial_opts[unit].parity       = parity;
+
+  grub_memmove (serial_set + 1, serial_set,
+		sizeof (serial_set[0]) * (SERIAL_COUNT - 1));
+  serial_set[0] = unit;
   return 0;
 }
 
@@ -3948,6 +4025,80 @@ static struct builtin builtin_serial =
   " in the grub shell, which specifies the file name of a tty device. The"
   " default values are COM1, 9600, 8N1."
 };
+
+static int
+linux_serial_parity (int unit)
+{
+  if (unit < 0 || unit >= SERIAL_COUNT)
+    return -1;
+
+  switch (serial_opts[unit].parity)
+    {
+    case UART_NO_PARITY:	return 'n';
+    case UART_ODD_PARITY:	return 'o';
+    case UART_EVEN_PARITY:	return 'e';
+    }
+
+  return -1;
+}
+
+static int
+linux_serial_word_len (int unit)
+{
+  if (unit < 0 || unit >= SERIAL_COUNT)
+    return -1;
+
+  switch (serial_opts[unit].word_len)
+    {
+    case UART_5BITS_WORD:	return '5';
+    case UART_6BITS_WORD:	return '6';
+    case UART_7BITS_WORD:	return '7';
+    case UART_8BITS_WORD:	return '8';
+    }
+
+  return -1;
+}
+
+static int
+linux_serial_print_one (char *to, int avail, int unit)
+{
+  int parity   = linux_serial_parity   (unit);
+  int word_len = linux_serial_word_len (unit);
+  char buf[32];
+  int len;
+
+  if (parity < 0 || word_len < 0)
+    return 0;
+
+  len = grub_sprintf (buf, "console=ttyS%u,%u%c%c ",
+		      unit, serial_opts[unit].speed, parity, word_len);
+  grub_strncpy (to, buf, avail);
+  return len;
+}
+
+static int
+opt_print_serial (kernel_t type, char *to, int avail)
+{
+  int i, len, total;
+
+  for (
+    i = SERIAL_COUNT - 1, total = 0;
+    i >= 0;
+    --i, total += len, to += len, avail -= len
+  )
+    len = linux_serial_print_one (to, avail, serial_set[i]);
+
+  return total;
+}
+
+#else
+
+static int
+opt_print_serial (kernel_t type, char *to, int avail)
+{
+  return 0;
+}
+
 #endif /* SUPPORT_SERIAL */
 
 #ifndef PLATFORM_EFI
