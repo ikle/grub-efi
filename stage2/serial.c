@@ -392,7 +392,9 @@ serial_putchar (int c)
 	      serial_putchar ('\r');
 	      serial_putchar ('\n');
 	    }
-	  serial_x++;
+	  else
+	    serial_x++;
+
 	  break;
 	}
     }
