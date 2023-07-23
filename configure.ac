@@ -183,7 +183,7 @@ STAGE2_CFLAGS="$STAGE2_CFLAGS -isystem `$CC -print-file-name=include`"
 LIBGCC=$($CC $CFLAGS -static-libgcc -print-libgcc-file-name)
 AC_SUBST(LIBGCC)
 
-LOADER_LDFLAGS="-Wl,--build-id=none ${LIBGCC}"
+LOADER_LDFLAGS="${LIBGCC}"
 
 if test "x$platform" = xpc; then
   LOADER_LDFLAGS="$LOADER_LDFLAGS -static"
@@ -231,6 +231,17 @@ fi
 
 if test "x$grub_cv_cc_Wundef" = xyes; then
   CPPFLAGS="$CPPFLAGS -Wundef"
+fi
+
+# Check if build ID can be disabled in the linker
+AC_MSG_CHECKING([whether linker accepts `--build-id=none'])
+save_LDFLAGS="$LDFLAGS"
+LDFLAGS="$LDFLAGS -Wl,--build-id=none"
+AC_TRY_LINK(, , build_id_flag=yes, build_id_flag=no)
+AC_MSG_RESULT([$build_id_flag])
+LDFLAGS="$save_LDFLAGS"
+if test "x$build_id_flag" = xyes; then
+  LDFLAGS="$LDFLAGS -Wl,--build-id=none"
 fi
 
 if test "x$with_binutils" != x; then
