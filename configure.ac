@@ -168,54 +168,54 @@ if test "x$ac_compiler_gnu" = xyes; then
     # unlikely-to-be-executed functions being linked before _start with GCC
     # >= 4.6.
     AC_CACHE_CHECK([whether gcc has -fno-reorder-functions],
-		   no_reorder_functions_flag, [
+		   grub_cv_cc_no_reorder_functions, [
       saved_CFLAGS=$CFLAGS
       CFLAGS="-fno-reorder-functions"
       AC_TRY_COMPILE(,
 		     ,
-		     no_reorder_functions_flag=yes,
-		     no_reorder_functions_flag=no)
+		     grub_cv_cc_no_reorder_functions=yes,
+		     grub_cv_cc_no_reorder_functions=no)
       CFLAGS=$saved_CFLAGS
     ])
-    if test "x$no_reorder_functions_flag" = xyes; then
+    if test "x$grub_cv_cc_no_reorder_functions" = xyes; then
       STAGE2_CFLAGS="$STAGE2_CFLAGS -fno-reorder-functions"
     fi
     # GCC >= 4.6 supports -fno-combine-stack-adjustments; this defends us
     # against optimisations that confuse the stack games played by GRUB
     # itself.
     AC_CACHE_CHECK([whether gcc has -fno-combine-stack-adjustments],
-		   no_combine_stack_adjustments_flag, [
+		   grub_cv_cc_no_combine_stack_adjustments, [
       saved_CFLAGS=$CFLAGS
       CFLAGS="-fno-combine-stack-adjustments"
       AC_TRY_COMPILE(,
 		     ,
-		     no_combine_stack_adjustments_flag=yes,
-		     no_combine_stack_adjustments_flag=no)
+		     grub_cv_cc_no_combine_stack_adjustments=yes,
+		     grub_cv_cc_no_combine_stack_adjustments=no)
       CFLAGS=$saved_CFLAGS
     ])
-    if test "x$no_combine_stack_adjustments_flag" = xyes; then
+    if test "x$grub_cv_cc_no_combine_stack_adjustments" = xyes; then
       GRUB_CFLAGS="$GRUB_CFLAGS -fno-combine-stack-adjustments"
     fi
     # Disable PIE if possible.
     AC_CACHE_CHECK([whether gcc has -fno-PIE],
-		   no_pie_flag, [
+		   grub_cv_cc_no_pie, [
       saved_CFLAGS=$CFLAGS
       CFLAGS="-fno-PIE"
-      AC_TRY_COMPILE(, , no_pie_flag=yes, no_pie_flag=no)
+      AC_TRY_COMPILE(, , grub_cv_cc_no_pie=yes, grub_cv_cc_no_pie=no)
       CFLAGS=$saved_CFLAGS
     ])
-    if test "x$no_pie_flag" = xyes; then
+    if test "x$grub_cv_cc_no_pie" = xyes; then
       STAGE1_CFLAGS="$STAGE1_CFLAGS -fno-PIE"
       STAGE2_CFLAGS="$STAGE2_CFLAGS -fno-PIE"
     fi
     AC_CACHE_CHECK([whether gcc has -no-pie],
-		   no_pie_linker_flag, [
+		   grub_cv_ld_no_pie, [
       saved_LDFLAGS=$LDFLAGS
       LDFLAGS="-no-pie"
-      AC_TRY_LINK(, , no_pie_linker_flag=yes, no_pie_linker_flag=no)
+      AC_TRY_LINK(, , grub_cv_ld_no_pie=yes, grub_cv_ld_no_pie=no)
       LDFLAGS=$saved_LDFLAGS
     ])
-    if test "x$no_pie_linker_flag" = xyes; then
+    if test "x$grub_cv_ld_no_pie" = xyes; then
       LDFLAGS="$LDFLAGS -no-pie"
     fi
 fi
