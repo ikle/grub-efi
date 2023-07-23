@@ -134,7 +134,7 @@ else
 fi
 
 # optimization flags
-if test "x$ac_cv_prog_gcc" = xyes; then
+if test "x$ac_compiler_gnu" = xyes; then
   if test "x$default_CFLAGS" = xyes; then
     # Autoconf may set CFLAGS to -O2 and/or -g. So eliminate them.
     CFLAGS="`echo $CFLAGS | sed -e 's/-g//g' -e 's/-O[[0-9]]//g'` -g"
