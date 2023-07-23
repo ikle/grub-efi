@@ -1,7 +1,6 @@
 pkgdatadir = $(datadir)/$(PACKAGE)/$(host_cpu)-$(host_vendor)
 
-# We can't use builtins or standard includes.
-AM_CCASFLAGS = $(STAGE1_CFLAGS) -fno-builtin -nostdinc
+AM_CCASFLAGS = $(STAGE1_CFLAGS)
 LDFLAGS = $(LOADER_LDFLAGS) -nostdlib -Wl,-N,-Ttext,7C00
 
 if !PLATFORM_EFI

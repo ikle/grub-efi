@@ -239,6 +239,12 @@ if test "x$platform" = xefi; then
   fi
 fi
 
+#
+# We can't use builtins or standard includes
+#
+STAGE1_CFLAGS="$STAGE1_CFLAGS -fno-builtin -nostdinc"
+STAGE2_CFLAGS="$STAGE2_CFLAGS -fno-builtin -nostdinc"
+
 AC_SUBST(STAGE1_CFLAGS)
 AC_SUBST(STAGE2_CFLAGS)
 AC_SUBST(GRUB_CFLAGS)

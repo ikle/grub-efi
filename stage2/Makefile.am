@@ -94,7 +94,7 @@ else
 GRAPHICS_FLAGS =
 endif
 
-STAGE2_COMPILE = $(STAGE2_CFLAGS) -fno-builtin -nostdinc \
+STAGE2_COMPILE = $(STAGE2_CFLAGS) \
 	$(NETBOOT_FLAGS) $(SERIAL_FLAGS) $(HERCULES_FLAGS) $(GRAPHICS_FLAGS)
 
 libstage2_a_SOURCES = boot.c builtins.c char_io.c cmdline.c common.c \
