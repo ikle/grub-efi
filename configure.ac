@@ -16,7 +16,7 @@ AC_PREREQ(2.57)
 AC_INIT([GRUB], [0.97], [bug-grub@gnu.org])
 AC_CONFIG_SRCDIR([stage2/stage2.c])
 AC_CONFIG_HEADER([config.h])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([subdir-objects])
 
 AC_CANONICAL_HOST
 
