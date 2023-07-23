@@ -3615,8 +3615,55 @@ real_root_func (char *arg, int attempt_mount)
 }
 
 static int
+is_file_exists (const char *path)
+{
+  if (grub_open ((char *) path))
+    {
+      grub_close();
+      return 1;
+    }
+
+  return 0;
+}
+
+static int
+find_marked_root (const char *label)
+{
+  const char *boot[] = {"(hd0,0)", "(hd1,0)", "(hd2,0)", "(hd3,0)", NULL};
+  int i;
+  char device[16];
+
+  for (i = 0; boot[i] != NULL; ++i)
+    {
+      errnum = 0;
+      grub_strncpy (device, boot[i], sizeof (device));
+
+      if (real_root_func (device, 1) == 0 && is_file_exists (label))
+	return 1;
+    }
+
+  return 0;
+}
+
+/*
+ * If the root partition is the first partition on the disk and there
+ * is a file named /boot/.${label}-mark on it, then ${label} can be
+ * used as the pointer to the root partition.
+ */
+static int
 root_func (char *arg, int flags)
 {
+  char label[64];
+
+  if (arg[0] != '\0' && arg[1] != '(' &&
+      strlen(arg) < (sizeof (label) - 12))  /* "/boot/." + "-mark" */
+    {
+      grub_sprintf(label, "/boot/.%s-mark", arg);
+
+      if (find_marked_root(label))
+        return 0;
+    }
+
   return real_root_func (arg, 1);
 }
 
