@@ -189,6 +189,22 @@ if test "x$ac_cv_prog_gcc" = xyes; then
     if test "x$no_reorder_functions_flag" = xyes; then
       STAGE2_CFLAGS="$STAGE2_CFLAGS -fno-reorder-functions"
     fi
+    # GCC >= 4.6 supports -fno-combine-stack-adjustments; this defends us
+    # against optimisations that confuse the stack games played by GRUB
+    # itself.
+    AC_CACHE_CHECK([whether gcc has -fno-combine-stack-adjustments],
+		   no_combine_stack_adjustments_flag, [
+      saved_CFLAGS=$CFLAGS
+      CFLAGS="-fno-combine-stack-adjustments"
+      AC_TRY_COMPILE(,
+		     ,
+		     no_combine_stack_adjustments_flag=yes,
+		     no_combine_stack_adjustments_flag=no)
+      CFLAGS=$saved_CFLAGS
+    ])
+    if test "x$no_combine_stack_adjustments_flag" = xyes; then
+      GRUB_CFLAGS="$GRUB_CFLAGS -fno-combine-stack-adjustments"
+    fi
   fi
 fi
 STAGE2_CFLAGS="$STAGE2_CFLAGS -isystem `$CC -print-file-name=include`"
