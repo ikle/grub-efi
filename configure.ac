@@ -100,11 +100,6 @@ if test "x$enable_maintainer_mode" = xyes; then
   fi
 fi
 
-# This should be checked before AC_PROG_CC
-if test "x$CFLAGS" = x; then
-  default_CFLAGS=yes
-fi
-
 if test "x$platform" = xpc -a "x$host_cpu" = xx86_64; then
   CFLAGS="-m32 $CFLAGS"
 fi
@@ -135,7 +130,6 @@ fi
 
 # optimization flags
 if test "x$ac_compiler_gnu" = xyes; then
-  if test "x$default_CFLAGS" = xyes; then
     # Autoconf may set CFLAGS to -O2 and/or -g. So eliminate them.
     CFLAGS="`echo $CFLAGS | sed -e 's/-g//g' -e 's/-O[[0-9]]//g'` -g"
     # If the user specify the directory for binutils, add the option `-B'.
@@ -224,7 +218,6 @@ if test "x$ac_compiler_gnu" = xyes; then
     if test "x$no_pie_linker_flag" = xyes; then
       LDFLAGS="$LDFLAGS -no-pie"
     fi
-  fi
 fi
 STAGE2_CFLAGS="$STAGE2_CFLAGS -isystem `$CC -print-file-name=include`"
 
