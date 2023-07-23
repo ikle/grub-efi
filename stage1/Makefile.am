@@ -1,7 +1,7 @@
 pkgdatadir = $(datadir)/$(PACKAGE)/$(host_cpu)-$(host_vendor)
 
 AM_CCASFLAGS = $(STAGE1_CFLAGS)
-LDFLAGS = $(LOADER_LDFLAGS) -nostdlib -Wl,-N,-Ttext,7C00
+LDFLAGS = $(LOADER_LDFLAGS) -Wl,-N,-Ttext,7C00
 
 if !PLATFORM_EFI
 

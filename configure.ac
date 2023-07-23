@@ -224,7 +224,7 @@ STAGE2_CFLAGS="$STAGE2_CFLAGS -isystem `$CC -print-file-name=include`"
 LIBGCC=$($CC $CFLAGS -static-libgcc -print-libgcc-file-name)
 AC_SUBST(LIBGCC)
 
-LOADER_LDFLAGS="${LIBGCC}"
+LOADER_LDFLAGS="-nostdlib ${LIBGCC}"
 
 if test "x$platform" = xpc; then
   LOADER_LDFLAGS="$LOADER_LDFLAGS -static"
