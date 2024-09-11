@@ -183,6 +183,7 @@ set_kernel_params(struct graphics_backend *backend,
             struct linux_kernel_params *params)
 {
     struct eg *eg;
+    grub_uint32_t ext_lfb_base;
 
     if (!backend || !backend->priv)
         return;
@@ -211,6 +212,14 @@ set_kernel_params(struct graphics_backend *backend,
         params->lfb_height = gop_info->vertical_resolution;
         params->lfb_base = gop_mode->frame_buffer_base;
         params->lfb_size = gop_mode->frame_buffer_size;
+
+        ext_lfb_base = (grub_uint64_t) gop_mode->frame_buffer_base >> 32;
+
+        if (ext_lfb_base != 0) {
+            params->capabilities |= VIDEO_CAPABILITY_64BIT_BASE;
+            params->ext_lfb_base = ext_lfb_base;
+        }
+
         params->lfb_pages = 1;
         params->vesapm_segment = 0;
         params->vesapm_offset = 0;

@@ -93,6 +93,9 @@ struct grub_linux_kernel_header
 /* Boot parameters for Linux based on 2.6.12. This is used by the setup
    sectors of Linux, and must be simulated by GRUB on EFI, because
    the setup sectors depend on BIOS.  */
+
+#define VIDEO_CAPABILITY_64BIT_BASE	2  /* Frame buffer base is 64-bit */
+
 struct linux_kernel_params
 {
   grub_uint8_t video_cursor_x;	/* 0 */
@@ -137,8 +140,9 @@ struct linux_kernel_params
   grub_uint16_t lfb_pages;	/* 32 */
   grub_uint16_t vesa_attrib;	/* 34 */
   grub_uint32_t capabilities;   /* 36 */
+  grub_uint32_t ext_lfb_base;   /* 3a */
 
-  grub_uint8_t padding3[0x40 - 0x3a];
+  grub_uint8_t padding3[0x40 - 0x3e];
 
   grub_uint16_t apm_version;	/* 40 */
   grub_uint16_t apm_code_segment;	/* 42 */
